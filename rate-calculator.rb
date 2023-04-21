@@ -3,6 +3,7 @@
 
 require 'csv'
 require_relative 'project'
+require_relative 'rate_builder'
 
 file_name = ARGV.first
 data = CSV.open(file_name, headers: true)
@@ -11,8 +12,8 @@ entries = data.map do |row|
   Project.new(row["rate"], row["start_date"], row["end_date"])
 end
 
-entries.sort_by! { |project| project.start_date }
+builder = RateBuilder.new
 
+entries.each { |project| builder.add_project!(project) }
 
-
-puts entries.to_s
+builder.print_rates_per_day
