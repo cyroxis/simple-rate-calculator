@@ -2,6 +2,12 @@
 
 require_relative 'project'
 class RateBuilder
+
+  RATE_TRAVEL_LOW = 45
+  RATE_TRAVEL_HIGH = 55
+  RATE_FULL_LOW = 75
+  RATE_FULL_HIGH = 85
+
   def initialize
     @charge_rates = {}
   end
@@ -25,9 +31,50 @@ class RateBuilder
   end
 
   def print_rates_per_day
+    total = 0
+    current_rate = nil
+    next_rate = @charge_rates[@first_day]
     (@first_day..@last_day).each do |date|
-      rate = @charge_rates[date]
-      puts "#{date}: #{rate}"
+      last_rate = current_rate
+      current_rate = next_rate
+      next_rate = @charge_rates[date + 1]
+
+      day_type = nil
+      if current_rate.nil?
+        day_type = :gap
+      elsif last_rate.nil?
+        day_type = :travel_start
+      elsif next_rate.nil?
+        day_type = :travel_end
+      else
+        day_type = :full
+      end
+
+      charge = rate(current_rate, day_type)
+      total += charge
+
+      printf "%-10s :%-4s :%-12s $%d\n", date, current_rate, day_type, charge
+    end
+
+    puts "Total: $#{total}"
+  end
+
+  private
+  def rate(rate, type)
+    if type == :gap
+      return 0
+    elsif type  == :full
+      if rate == :high
+        return RATE_FULL_HIGH
+      else
+        return RATE_FULL_LOW
+      end
+    else
+      if rate == :high
+        return RATE_TRAVEL_HIGH
+      else
+        return RATE_TRAVEL_LOW
+      end
     end
   end
 end
